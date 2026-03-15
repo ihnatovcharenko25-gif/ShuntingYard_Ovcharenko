@@ -1,4 +1,6 @@
-﻿public class MyStack
+﻿namespace ShuntingYard_Ovcharenko;
+
+public class MyStack
 {
     private const int Capacity = 50;
     private string[] _array = new string[Capacity];
