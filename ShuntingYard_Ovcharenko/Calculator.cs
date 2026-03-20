@@ -2,16 +2,16 @@
 
 namespace ShuntingYard_Ovcharenko;
 
-public partial class Calculator 
+public class Calculator 
 {
     private bool IsOperator(string symbol)
     {
-        return symbol == "+" || symbol == "-" || symbol == "*" || symbol == "/" || symbol == "^";
+        return symbol is "+" or "-" or "*" or "/" or "^";
     }
     
     private bool IsFunc(string symbol)
     {
-        return symbol == "max" || symbol == "sin" || symbol == "cos";
+        return symbol is "max" or "sin" or "cos";
     }
 
     
@@ -24,8 +24,24 @@ public partial class Calculator
         {
             if (symbol == ' ')
                 continue;
+
+            if (symbol == '-' && (arr.Count == 0 || arr.GetAt(arr.Count - 1) == "("))
+            {
+                arr.Add("0");
+                arr.Add(symbol.ToString());
+                continue;
+            }
+
+            if ( char.IsLetter(symbol) && arr.Count != 0 && char.IsLetter(arr.GetAt(arr.Count - 1)[0]) )
+            {
+                string s;
+                s = arr.GetAt(arr.Count - 1);
+                arr.SetAt(arr.Count - 1, s + symbol);
+                continue;
+            }
             
-            if (!char.IsDigit(symbol) && !IsOperator(symbol.ToString()) && symbol!='(' && symbol!=')')
+            if ( !char.IsDigit(symbol) && !IsOperator(symbol.ToString()) && symbol!='(' 
+                 && symbol!=')' && symbol != ',' && !char.IsLetter(symbol))
                 throw new Exception($"Invalid symbol in input: {symbol}");
             
             if (char.IsDigit(symbol) && arr.Count != 0 && char.IsDigit(arr.GetAt(arr.Count - 1)[0]))
@@ -42,21 +58,21 @@ public partial class Calculator
         return arr;
     }
 
-    
-    private readonly Dictionary<string, int> _priority = new Dictionary<string, int>()
+
+    private int Priority(string s)
     {
-        {"+", 0},
-        {"-", 0},
-        {"*", 1},
-        {"/", 1},
-        {"^", 2},
-        {"(", 3},
-        {")", 3}
-    };
-    private int Priority(string? token)
-    {
-        if (token == null) return -1;
-        return _priority[token];
+        return s switch
+        {
+            "+" => 0,
+            "-" => 0,
+            "*" => 1,
+            "/" => 1,
+            "^" => 2,
+            "max" => 1,
+            "sin" => 1,
+            "cos" => 1,
+            _ => 0
+        };
     }
 
     
@@ -69,6 +85,18 @@ public partial class Calculator
         {
             var token = expr.GetAt(i);
             //Console.WriteLine(token);
+            if (token == ",")
+            {
+                while (stack.Examine()!="(" && stack.Examine()!=null)
+                {
+                    string tokenFromStack = stack.Pop();
+                    queue.Enqueue(tokenFromStack);
+                    continue;
+                }
+                //Console.WriteLine(stack.Examine());
+                //stack.Pop();  
+                continue;
+            }
             if (char.IsDigit(token[0]))
             {
                 queue.Enqueue(token);
@@ -89,13 +117,18 @@ public partial class Calculator
                     queue.Enqueue(tokenFromStack);
                 }
                 //Console.WriteLine(stack.Examine());
-                stack.Pop();  
+                stack.Pop();
+                if (IsFunc(stack.Examine()))
+                {
+                    string tokenFromStack = stack.Pop();
+                    queue.Enqueue(tokenFromStack);
+                }
                 continue;
             }
             while ( (Priority(stack.Examine()) >= Priority(token) && token!="^") ||
                     (Priority(stack.Examine()) >  Priority(token) && token=="^")    )
             {
-                if (stack.Examine() == "(")
+                if (stack.Examine() == "(" || stack.Examine()==null)
                     break;
                 string tokenFromStack = stack.Pop();
                 queue.Enqueue(tokenFromStack);
@@ -113,21 +146,29 @@ public partial class Calculator
         return queue;
     }
 
-    private int Operation(int a, int b, string s)
+    private decimal Operation(decimal a, decimal b, string s)
     {
-        switch (s)
+        return s switch
         {
-            case "+": return a + b;
-            case "-": return a - b;
-            case "*": return a * b;
-            case "/": return a / b;
-            case "^": return (int)Math.Pow(a, b);
-            default: return 0;
-        }
+            "+" => a + b,
+            "-" => a - b,
+            "*" => a * b,
+            "/" => a / b,
+            "^" => (int)Math.Pow((float)a, (float)b),
+            "max" => Math.Max(a, b),
+            "sin" => (int)Math.Sin((float)a),
+            "cos" => (int)Math.Cos((float)a),
+            _ => 0
+        };
+    }
+
+    private bool IsUnary(string s)
+    {
+        return s is "sin" or "cos";
     }
 
     
-    public int Calculate(MyQueue queue)
+    public decimal Calculate(MyQueue queue)
     {
 
         int size = queue.Count;
@@ -138,17 +179,23 @@ public partial class Calculator
         bool[] used = new bool[size];
 
         int tokenToTake = size-1; 
-        int ResultRec(string token)
+        decimal ResultRec(string token)
         {
             tokenToTake--;
-            if (IsOperator(token))
-            {
-                int secondRes = ResultRec(expr[tokenToTake]);
-                int firstRes = ResultRec(expr[tokenToTake]);
-                return Operation(firstRes, secondRes, token);
-            }
+            if (IsOperator(token) || IsFunc(token))
+                if (!IsUnary(token))
+                {
+                    decimal secondRes = ResultRec(expr[tokenToTake]);
+                    decimal firstRes = ResultRec(expr[tokenToTake]);
+                    return Operation(firstRes, secondRes, token);
+                }
+                else
+                {
+                    decimal firstRes = ResultRec(expr[tokenToTake]);
+                    return Operation(firstRes, 0, token);
+                }
 
-            return int.Parse(expr[tokenToTake + 1]);
+            return decimal.Parse(expr[tokenToTake + 1]);
         }
 
         return ResultRec(expr[tokenToTake]);

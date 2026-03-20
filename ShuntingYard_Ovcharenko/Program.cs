@@ -14,8 +14,9 @@ while (true)
     var q = calc.ChangeNotation(ans);
     //for (int i=0; i<q.Count; i++)
     //    Console.WriteLine(q.GetAt(i));
-         
-    Console.WriteLine(calc.Calculate(q));   
+
+    var bareResult = calc.Calculate(q);
+    Console.WriteLine(Math.Round(bareResult, 4));   
 }
 
  
