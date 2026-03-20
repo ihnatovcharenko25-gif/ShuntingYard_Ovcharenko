@@ -6,6 +6,7 @@ public class MyQueue
     private string[] _array = new string[Capacity];
     private int _pointer, _pointerBegin;
     private int _count;
+    public int Count => _count;
     
     public void Enqueue(string value)
     {
@@ -32,5 +33,10 @@ public class MyQueue
     {
         if (_count == 0) return null;
         return _array[_pointerBegin];
+    }
+
+    public string GetAt(int pos)
+    {
+        return _array[(_pointerBegin + pos) % Capacity];
     }
 }

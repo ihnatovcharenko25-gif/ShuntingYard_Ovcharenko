@@ -2,16 +2,16 @@
 
 public class MyArrayList
 {
-    private int[] _array = new int[10];
+    private string[] _array = new string[10];
     private int _pointer = 0;
-    public void Add(int element)
     
+    public void Add(string element)
     {
         _array[_pointer] = element;
         _pointer += 1;
         if (_pointer == _array.Length)
         {
-            var extendedArray = new int[_array.Length * 2];
+            var extendedArray = new string[_array.Length * 2];
             for (var i = 0; i < _array.Length; i++)
             {
                 extendedArray[i] = _array[i];
@@ -22,7 +22,7 @@ public class MyArrayList
         }
     }
     
-    public void Remove(int element)
+    public void Remove(string element)
     {
         for (var i = 0; i < _pointer; i++)
         {
@@ -38,12 +38,18 @@ public class MyArrayList
         }
     }
     
-    public int GetAt(int index)
+    public string GetAt(int index)
     {
         return _array[index];
     }
     
-    public int IndexOf(int element)
+    public void SetAt(int index, string value)
+    {
+        if (index >= 0 && index < _pointer)
+            _array[index] = value;
+    }
+    
+    public int IndexOf(string element)
     {
         for (var i = 0; i < _pointer; i++)
         {
@@ -55,7 +61,7 @@ public class MyArrayList
         return -1;
     }
     
-    public bool Contains(int element)
+    public bool Contains(string element)
     {
         return IndexOf(element) != -1;
     }
